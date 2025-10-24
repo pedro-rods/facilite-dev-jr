@@ -14,7 +14,7 @@ jib {
         }
     }
     to {
-        image = "facilitedevjr:latest"
+        image = "hrlite:latest"
     }
     container {
         entrypoint = ["bash", "-c", "/entrypoint.sh"]

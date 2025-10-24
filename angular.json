@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "facilitedevjr": {
+    "hr-lite": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -82,15 +82,15 @@
         "serve": {
           "builder": "@angular-builders/custom-webpack:dev-server",
           "options": {
-            "buildTarget": "facilitedevjr:build:development",
+            "buildTarget": "hr-lite:build:development",
             "port": 4200
           },
           "configurations": {
             "production": {
-              "buildTarget": "facilitedevjr:build:production"
+              "buildTarget": "hr-lite:build:production"
             },
             "development": {
-              "buildTarget": "facilitedevjr:build:development"
+              "buildTarget": "hr-lite:build:development"
             }
           },
           "defaultConfiguration": "development"

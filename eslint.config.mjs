@@ -6,6 +6,7 @@ import tseslint from 'typescript-eslint';
 import eslint from '@eslint/js';
 // For a detailed explanation, visit: https://github.com/angular-eslint/angular-eslint/blob/main/docs/CONFIGURING_FLAT_CONFIG.md
 import angular from 'angular-eslint';
+import cypress from 'eslint-plugin-cypress/flat';
 // jhipster-needle-eslint-add-import - JHipster will add additional import here
 
 export default tseslint.config(
@@ -124,6 +125,23 @@ export default tseslint.config(
     rules: {
       '@angular-eslint/template/click-events-have-key-events': 'off',
       '@angular-eslint/template/interactive-supports-focus': 'off',
+    },
+  },
+  {
+    files: ['src/test/javascript/cypress/**/*.ts'],
+    extends: [...tseslint.configs.recommendedTypeChecked, cypress.configs.recommended],
+    languageOptions: {
+      parserOptions: {
+        project: ['./src/test/javascript/cypress/tsconfig.json'],
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/unbound-method': 'off',
     },
   },
   // jhipster-needle-eslint-add-config - JHipster will add additional config here
