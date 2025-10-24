@@ -6,12 +6,21 @@ Monólito JHipster com CRUD de Funcionários, Departamentos e Endereços. O desa
 
 ---
 
+## Stack e baseline
+
+- Spring Boot + JWT, MapStruct, JPA, Gradle
+- Angular + RxJS + Jest + Cypress
+- PostgreSQL (dev/prod) • Docker Compose opcional
+- Documentação base JHipster: [JHipster 8.11.0 archive](https://www.jhipster.tech/documentation-archive/v8.11.0)
+
+---
+
 ## Requisitos
 
 - Java 17
-- Node 18+ e npm 9+
-- Docker e Docker Compose (opcional para banco)
-- PostgreSQL 14+
+- Node 18+ (usar `./npmw`)
+- PostgreSQL 14+ ou Docker
+- Gradle Wrapper
 
 ---
 
@@ -30,7 +39,8 @@ datasource:
   password: root
 ```
 
-Você pode criar um banco com o nome "devjr" e rodar a aplicação. Altere usuário e senha no arquivo application-dev.yml de acordo com a sua necessidade.
+Você pode criar um banco com o nome "devjr" e rodar a aplicação.
+Altere usuário e senha do banco de dados no arquivo application-dev.yml de acordo com a sua necessidade. Por padrão, o usuário é 'postgres' e a senha 'root'
 
 #### Se preferir, configure as variáveis de ambiente:
 
@@ -44,18 +54,25 @@ export SPRING_DATASOURCE_PASSWORD=hrlite
 ### 2) Banco via Docker (opcional)
 
 ```bash
-docker run -d --name pg-devjr -e POSTGRES_DB=devjr \
-  -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=root \
+docker run -d --name pg-facilitedevjr \
+  -e POSTGRES_DB=facilitedevjr \
+  -e POSTGRES_USER=facilitedevjr \
+  -e POSTGRES_PASSWORD=facilitedevjr \
   -p 5432:5432 postgres:14
 ```
 
 ### 3) Backend
 
-> Executar com profile 'dev'
+> Executar com profile 'dev' (com o comando abaixo, ou importar a aplicação em IDE e apenas executar o projeto java)
 
 ```bash
-./gradlew
-./gradlew clean bootRun
+./gradlew -x webapp
+```
+
+também é possível executar com o comando:
+
+```bash
+SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
 ```
 
 - API: `http://localhost:8080`
@@ -72,6 +89,12 @@ npm start
 
 ---
 
+## Perfis e autenticação
+
+Após execução da aplicação, basta fazer login com usuário 'admin' e senha 'admin'.
+
+---
+
 ## Referências JHipster
 
 - Docs: [https://www.jhipster.tech](https://www.jhipster.tech)
@@ -80,106 +103,89 @@ npm start
 
 ---
 
-## Arquitetura do projeto
+## Arquitetura (visão macro)
 
-### Camadas
+- `web/rest` — _Resources_ REST
+- `service` — orquestração, regras, integrações
+- `service/dto` — DTOs de fronteira
+- `service/mapper` — MapStruct
+- `domain` — entidades JPA
+- `repository` — Spring Data
+- `src/main/webapp/app` — Angular (módulos, components, services)
 
-- **web**: `*Resource` (REST Controllers). Tradução de HTTP para casos de uso.
-- **service**: `*Service` e `*ServiceImpl`. Orquestração, regras, integração ViaCEP.
-- **service.dto**: objetos de fronteira entre web e domínio persistido.
-- **service.mapper**: MapStruct entre entidades e DTOs.
-- **domain**: entidades JPA.
-- **repository**: Spring Data JPA.
-- **client** (Angular): módulos, componentes, serviços HTTP, forms reativos.
-
-### Entidades principais
+Entidades principais:
 
 - `Department(name, costCenter)`
 - `Address(cep, street, number, complement, district, city, uf)`
 - `Employee(firstName, lastName, email, phone, hireDate, salary, active, department, address)`
 
-### Endpoints relevantes
-
-- `GET /api/employees` — paginação padrão JHipster
-- `POST /api/employees` — criação
-- `GET /api/cep/{cep}` — lookup de CEP no ViaCEP via backend **(a implementar)**
+Paginação padrão JHipster em listagens.
 
 ---
 
-## O que já vem pronto
+## Desafio técnico do candidato
 
-- CRUD básico gerado pelo JHipster para Employee, Department e Address.
-- Formulário de Employee com campos de endereço e botão “Buscar CEP” visível.
-- Stubs:
+Implementar a funcionalidade **“Buscar CEP”**
 
-  - `CepLookupResource.get(String cep)` — vazio
-  - `CepLookupService.normalizeCep(String raw)` — vazio
-  - `CepLookupService.lookup(String cep)` — vazio
-  - `cep-lookup.service.ts.fetch(cep: string)` — vazio
-  - `employee-update.component.ts.onBuscarCep()` — vazio
+- Ao fazer login na aplicação, você tem um menu 'Entities' > 'Address'.
+- A aplicação recentemente gerada vai inicializar com registros aleatórios como exemplo.
+- O objetivo da task é implementar, no formulário de cadastro/edição de endereço a funcionalidade de consulta de CEP para preenchimento automático do formulário.
+- Fica livre ao candidato o gatilho da consulta de CEP, sendo um botão ou a busca automática ao terminar de digitar.
+- Fica livre também a instalação de pacotes e dependências, como por exemplo uma biblioteca de máscara de input.
+  ![img.png](img.png)
 
-- Testes de esqueleto para `CepLookupServiceTest`.
+> Alguns métodos e classes já foram criados, sem implementação, para orientar o desenvolvimento.
 
----
+### **Dica e sugestão**:
 
-## O que precisa ser implementado
+- Criar botão para consulta do CEP (address-update.component.html).
+- Ao clicar no botão, chamar método onBuscarCep() no arquivo address-update.component.ts.
+- O método deve identificar e validar o valor do campo de CEP. Se estiver correto, chamar o método cepLookup(cep:string) no arquivo address.service.ts.
+- O método da service deve disparar um request ao backend `GET /api/cep/{cep}` e aguardar o retorno do objeto Address
+- No backend, implementar o método get() na classe CepLookupResource chamando o método lookup() da CepLookupService
+- Implementar, na classe CepLookupServiceImpl, consulta de CEP na API do viacep `https://viacep.com.br/ws/{cep}/json/`
+- Documentação do viacep: https://viacep.com.br/
 
-### Backend
+> A seguir, informações técnicas separadas em frontend e backend.
 
-1. **Normalização e validação de CEP**
+### Back-end a implementar
 
-- `normalizeCep(String raw)`: remover não dígitos, validar 8 dígitos.
-- CEP inválido → HTTP 400.
+- **Endpoint**: `GET /api/cep/{cep}` retorna `AddressDTO`
+- **Serviço**:
 
-2. **Integração ViaCEP**
+  - `normalizeCep(String raw)`: remover não dígitos, validar exatamente 8 dígitos; inválido → **400**
+  - `lookup(String cep)`: chamar `https://viacep.com.br/ws/{cep}/json/`
 
-- `lookup(String cep)`: `https://viacep.com.br/ws/{cep}/json/`.
-- `erro=true` → HTTP 404.
-- Mapear:
+    - `erro=true` → **404**
+    - Falha de rede/timeout/5xx → **502**
+    - Mapear:
 
-  - `logradouro` → `street`
-  - `bairro` → `district`
-  - `localidade` → `city`
-  - `uf` → `uf`
-  - `complemento` → `complement`
+      - `logradouro` → `street`
+      - `bairro` → `district`
+      - `localidade` → `city`
+      - `uf` → `uf`
+      - `complemento` → `complement`
 
-- Falhas de rede ou 5xx → HTTP 502.
+**Stubs já presentes**
 
-3. **Exposição REST**
+- `CepLookupResource.get(String cep)`
+- `CepLookupService.normalizeCep(String raw)`
+- `CepLookupService.lookup(String cep)`
 
-- `GET /api/cep/{cep}` retorna `AddressDTO`.
+### Front-end a implementar
 
-4. **Testes**
-
-- Happy path 200.
-- 400 para CEP inválido.
-- 404 para CEP inexistente.
-- 502 para indisponibilidade do ViaCEP.
-
-### Frontend
-
-1. **Serviço de CEP**
-
-- `cep-lookup.service.ts.fetch(cep)`: GET `/api/cep/{cep}`.
-
-2. **Componente**
-
+- Serviço `cep-lookup.service.ts.fetch(cep: string)` chamando `/api/cep/{cep}`
 - `employee-update.component.ts.onBuscarCep()`:
 
-  - Normalizar entrada.
-  - Loading + desabilitar botão durante request.
-  - Preencher `street, district, city, uf, complement`.
-  - Preservar `number` já digitado.
-  - Tratar erros:
+  - Normalizar CEP
+  - Loading + desabilitar botão
+  - Preencher `street, district, city, uf, complement`
+  - Preservar `number` se já digitado
+  - Exibir mensagens de erro:
 
-    - 400: “CEP inválido”
-    - 404: “CEP não encontrado”
-    - 502: “Serviço de CEP indisponível”
-
-3. **UX mínima**
-
-- Feedback visual de carregamento.
-- Toast ou mensagem inline no form.
+    - 400 “CEP inválido”
+    - 404 “CEP não encontrado”
+    - 502 “Serviço de CEP indisponível”
 
 ---
 
@@ -187,28 +193,26 @@ npm start
 
 ### Funcional
 
-- `GET /api/cep/{cep}` retorna `200` com `AddressDTO` válido para CEP existente.
-- Form de Employee preenche endereço ao acionar “Buscar CEP”.
-- Mensagens de erro corretas por cenário: 400, 404, 502.
-- Campo `number` preservado após preenchimento automático.
+- `GET /api/cep/{cep}` responde **200** com `AddressDTO` completo quando CEP existe.
+- Formulário de Employee é preenchido ao acionar “Buscar CEP”.
+- Erros tratados e exibidos conforme status: 400, 404, 502.
+- Campo `number` permanece intacto após _autofill_.
 
 ### Qualidade técnica
 
-- Validação e tratamento de exceções consistentes.
-- Mapeamento ViaCEP → `AddressDTO` completo e tipado.
-- Código alinhado a padrões JHipster: DTO, Mapper, ServiceImpl, Resource.
+- Código coeso, desacoplado.
+- Tratamento de exceções consistente e mapeado para HTTP correto.
+- MapStruct aplicado para DTO.
 
-### UX
+### Manutenibilidade e DX
 
-- Botão com estado de loading.
-- Erros exibidos com texto claro e não intrusivo.
-- Form não perde dados manuais já preenchidos.
+- Nomes, pacotes e responsabilidades alinhados ao padrão JHipster.
 
-### Diferenciais (não obrigatórios)
+### UX mínima
 
-- Debounce no campo CEP com auto-trigger.
-
----
+- Estado de carregamento no botão.
+- Mensagens de erro claras e não intrusivas.
+- Não perder dados manuais já digitados.
 
 ## Troubleshooting
 
