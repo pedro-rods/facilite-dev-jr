@@ -1,0 +1,26 @@
+{
+  "annotations": {
+    "changelogDate": "20251024201135"
+  },
+  "applications": ["devjr"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "name",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "minlength", "maxlength", "unique"],
+      "fieldValidateRulesMaxlength": "80",
+      "fieldValidateRulesMinlength": "2"
+    },
+    {
+      "fieldName": "costCenter",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength"],
+      "fieldValidateRulesMaxlength": "20"
+    }
+  ],
+  "name": "Department",
+  "relationships": [],
+  "searchEngine": "no",
+  "service": "serviceImpl"
+}

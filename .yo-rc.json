@@ -1,0 +1,18 @@
+{
+  "generator-jhipster": {
+    "applicationType": "monolith",
+    "authenticationType": "jwt",
+    "baseName": "devjr",
+    "buildTool": "gradle",
+    "clientFramework": "angular",
+    "devDatabaseType": "postgresql",
+    "entities": ["Department", "Address", "Employee"],
+    "jhipsterVersion": "8.11.0",
+    "jwtSecretKey": "YWFiMDU2YjVjNmM2NTg3ZmNmMWE1NWM3NWM0ODlhMzU2ODg5YTNhYzc5YTQ2ZWRlNmY5NjVmYjNiZTQ4NjQ3YWZkYjVkYzdkZTRhNDRmYWMxM2IxMGY5NzUxZTYyZTM3YjlmMDJlYjNlN2MxMDg4YTY4NzBjZDg3OGQzYTc0ZWU=",
+    "languages": ["en"],
+    "lastLiquibaseTimestamp": 1761336815000,
+    "nativeLanguage": "en",
+    "packageName": "co.facilite.devjr",
+    "prodDatabaseType": "postgresql"
+  }
+}
