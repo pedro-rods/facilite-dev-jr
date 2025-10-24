@@ -1,0 +1,55 @@
+application {
+  config {
+    baseName hrLite,
+    applicationType monolith,
+    packageName com.company.hrlite,
+    authenticationType jwt,
+    prodDatabaseType postgresql,
+    devDatabaseType postgresql,
+    enableSwaggerCodegen true,
+    buildTool gradle,
+    clientFramework angular,
+    testFrameworks [cypress]
+  }
+  entities *
+}
+
+enum Uf { AC, AL, AM, AP, BA, CE, DF, ES, GO, MA, MG, MS, MT, PA, PB, PE, PI, PR, RJ, RN, RO, RR, RS, SC, SE, SP, TO }
+
+entity Department {
+  name String required minlength(2) maxlength(80) unique
+  costCenter String maxlength(20)
+}
+
+entity Address {
+  cep String required minlength(8) maxlength(9) // aceita 00000000 ou 00000-000
+  street String required maxlength(120)
+  number String maxlength(10)
+  complement String maxlength(60)
+  district String maxlength(80)
+  city String required maxlength(80)
+  uf Uf required
+}
+
+entity Employee {
+  firstName String required maxlength(60)
+  lastName String required maxlength(60)
+  email String required pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/) unique
+  phone String maxlength(20)
+  hireDate Instant required
+  salary BigDecimal required
+  active Boolean required
+}
+
+relationship ManyToOne {
+  Employee{department(name)} to Department
+}
+
+relationship OneToOne {
+  Employee{address} to Address
+}
+
+paginate Employee with pagination
+dto * with mapstruct
+service all with serviceImpl
+filter Employee
