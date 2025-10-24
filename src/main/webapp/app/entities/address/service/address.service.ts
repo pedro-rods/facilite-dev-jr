@@ -44,6 +44,10 @@ export class AddressService {
     return this.http.delete(`${this.resourceUrl}/${id}`, { observe: 'response' });
   }
 
+  cepLookup(cep: string) {
+    /* TODO */
+  }
+
   getAddressIdentifier(address: Pick<IAddress, 'id'>): number {
     return address.id;
   }

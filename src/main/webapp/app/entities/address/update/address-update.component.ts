@@ -75,4 +75,8 @@ export class AddressUpdateComponent implements OnInit {
     this.address = address;
     this.addressFormService.resetForm(this.editForm, address);
   }
+
+  onBuscarCep(): void {
+    /* TODO: chamar service, setar form e mensagens */
+  }
 }
