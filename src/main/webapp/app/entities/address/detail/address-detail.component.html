@@ -1,0 +1,89 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    @if (address(); as addressRef) {
+      <div>
+        <h2 data-cy="addressDetailsHeading"><span jhiTranslate="devjrApp.address.detail.title">Address</span></h2>
+
+        <hr />
+
+        <jhi-alert-error />
+
+        <jhi-alert />
+
+        <dl class="row-md jh-entity-details">
+          <dt><span jhiTranslate="global.field.id">ID</span></dt>
+          <dd>
+            <span>{{ addressRef.id }}</span>
+          </dd>
+          <dt><span jhiTranslate="devjrApp.address.cep">Cep</span></dt>
+          <dd>
+            <span>{{ addressRef.cep }}</span>
+          </dd>
+          <dt><span jhiTranslate="devjrApp.address.street">Street</span></dt>
+          <dd>
+            <span>{{ addressRef.street }}</span>
+          </dd>
+          <dt><span jhiTranslate="devjrApp.address.number">Number</span></dt>
+          <dd>
+            <span>{{ addressRef.number }}</span>
+          </dd>
+          <dt><span jhiTranslate="devjrApp.address.complement">Complement</span></dt>
+          <dd>
+            <span>{{ addressRef.complement }}</span>
+          </dd>
+          <dt><span jhiTranslate="devjrApp.address.district">District</span></dt>
+          <dd>
+            <span>{{ addressRef.district }}</span>
+          </dd>
+          <dt><span jhiTranslate="devjrApp.address.city">City</span></dt>
+          <dd>
+            <span>{{ addressRef.city }}</span>
+          </dd>
+          <dt><span jhiTranslate="devjrApp.address.uf">Uf</span></dt>
+          <dd>
+            <span [jhiTranslate]="'devjrApp.Uf.' + (addressRef.uf ?? 'null')">{{
+              {
+                null: '',
+                AC: 'AC',
+                AL: 'AL',
+                AM: 'AM',
+                AP: 'AP',
+                BA: 'BA',
+                CE: 'CE',
+                DF: 'DF',
+                ES: 'ES',
+                GO: 'GO',
+                MA: 'MA',
+                MG: 'MG',
+                MS: 'MS',
+                MT: 'MT',
+                PA: 'PA',
+                PB: 'PB',
+                PE: 'PE',
+                PI: 'PI',
+                PR: 'PR',
+                RJ: 'RJ',
+                RN: 'RN',
+                RO: 'RO',
+                RR: 'RR',
+                RS: 'RS',
+                SC: 'SC',
+                SE: 'SE',
+                SP: 'SP',
+                TO: 'TO',
+              }[addressRef.uf ?? 'null']
+            }}</span>
+          </dd>
+        </dl>
+
+        <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+        </button>
+
+        <button type="button" [routerLink]="['/address', addressRef.id, 'edit']" class="btn btn-primary">
+          <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>
