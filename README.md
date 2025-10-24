@@ -1,240 +1,285 @@
-# Facilite Dev Jr — README
+# hrLite
 
-## Resumo da aplicação
+This application was generated using JHipster 8.11.0, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v8.11.0](https://www.jhipster.tech/documentation-archive/v8.11.0).
 
-Monólito JHipster com CRUD de Funcionários, Departamentos e Endereços. O desafio é implementar a consulta de CEP via backend que integra o ViaCEP e preenche o formulário de endereço no front.
+## Project Structure
 
----
+Node is required for generation and recommended for development. `package.json` is always generated for a better development experience with prettier, commit hooks, scripts and so on.
 
-## Requisitos
+In the project root, JHipster generates configuration files for tools like git, prettier, eslint, husky, and others that are well known and you can find references in the web.
 
-* Java 17
-* Node 18+ e npm 9+
-* Docker e Docker Compose (opcional para banco)
-* PostgreSQL 14+
+`/src/*` structure follows default Java structure.
 
----
+- `.yo-rc.json` - Yeoman configuration file
+  JHipster configuration is stored in this file at `generator-jhipster` key. You may find `generator-jhipster-*` for specific blueprints configuration.
+- `.yo-resolve` (optional) - Yeoman conflict resolver
+  Allows to use a specific action when conflicts are found skipping prompts for files that matches a pattern. Each line should match `[pattern] [action]` with pattern been a [Minimatch](https://github.com/isaacs/minimatch#minimatch) pattern and action been one of skip (default if omitted) or force. Lines starting with `#` are considered comments and are ignored.
+- `.jhipster/*.json` - JHipster entity configuration files
 
-## Setup rápido
+- `npmw` - wrapper to use locally installed npm.
+  JHipster installs Node and npm locally using the build tool by default. This wrapper makes sure npm is installed locally and uses it avoiding some differences different versions can cause. By using `./npmw` instead of the traditional `npm` you can configure a Node-less environment to develop or test your application.
+- `/src/main/docker` - Docker configurations for the application and services that the application depends on
 
-### 1) Variáveis de ambiente
-A configuração do acesso ao banco de dados é feita no arquivo application-dev.yml e está, por padrão, como abaixo:
+## Development
+
+### Doing API-First development using openapi-generator-cli
+
+[OpenAPI-Generator]() is configured for this application. You can generate API code from the `src/main/resources/swagger/api.yml` definition file by running:
+
+```bash
+./gradlew openApiGenerate
+```
+
+Then implements the generated delegate classes with `@Service` classes.
+
+To edit the `api.yml` definition file, you can use a tool such as [Swagger-Editor](). Start a local instance of the swagger-editor using docker by running: `docker compose -f src/main/docker/swagger-editor.yml up -d`. The editor will then be reachable at [http://localhost:7742](http://localhost:7742).
+
+Refer to [Doing API-First development][] for more details.
+The build system will install automatically the recommended version of Node and npm.
+
+We provide a wrapper to launch npm.
+You will only need to run this command when dependencies change in [package.json](package.json).
+
+```
+./npmw install
+```
+
+We use npm scripts and [Angular CLI][] with [Webpack][] as our build system.
+
+Run the following commands in two separate terminals to create a blissful development experience where your browser
+auto-refreshes when files change on your hard drive.
+
+```
+./gradlew -x webapp
+./npmw start
+```
+
+Npm is also used to manage CSS and JavaScript dependencies used in this application. You can upgrade dependencies by
+specifying a newer version in [package.json](package.json). You can also run `./npmw update` and `./npmw install` to manage dependencies.
+Add the `help` flag on any command to see how you can use it. For example, `./npmw help update`.
+
+The `./npmw run` command will list all the scripts available to run for this project.
+
+### PWA Support
+
+JHipster ships with PWA (Progressive Web App) support, and it's turned off by default. One of the main components of a PWA is a service worker.
+
+The service worker initialization code is disabled by default. To enable it, uncomment the following code in `src/main/webapp/app/app.config.ts`:
+
+```typescript
+ServiceWorkerModule.register('ngsw-worker.js', { enabled: false }),
+```
+
+### Managing dependencies
+
+For example, to add [Leaflet][] library as a runtime dependency of your application, you would run following command:
+
+```
+./npmw install --save --save-exact leaflet
+```
+
+To benefit from TypeScript type definitions from [DefinitelyTyped][] repository in development, you would run following command:
+
+```
+./npmw install --save-dev --save-exact @types/leaflet
+```
+
+Then you would import the JS and CSS files specified in library's installation instructions so that [Webpack][] knows about them:
+Edit [src/main/webapp/app/app.config.ts](src/main/webapp/app/app.config.ts) file:
+
+```
+import 'leaflet/dist/leaflet.js';
+```
+
+Edit [src/main/webapp/content/scss/vendor.scss](src/main/webapp/content/scss/vendor.scss) file:
+
+```
+@import 'leaflet/dist/leaflet.css';
+```
+
+Note: There are still a few other things remaining to do for Leaflet that we won't detail here.
+
+For further instructions on how to develop with JHipster, have a look at [Using JHipster in development][].
+
+### Using Angular CLI
+
+You can also use [Angular CLI][] to generate some custom client code.
+
+For example, the following command:
+
+```
+ng generate component my-component
+```
+
+will generate few files:
+
+```
+create src/main/webapp/app/my-component/my-component.component.html
+create src/main/webapp/app/my-component/my-component.component.ts
+update src/main/webapp/app/app.config.ts
+```
+
+## Building for production
+
+### Packaging as jar
+
+To build the final jar and optimize the hrLite application for production, run:
+
+```
+./gradlew -Pprod clean bootJar
+```
+
+This will concatenate and minify the client CSS and JavaScript files. It will also modify `index.html` so it references these new files.
+To ensure everything worked, run:
+
+```
+java -jar build/libs/*.jar
+```
+
+Then navigate to [http://localhost:8080](http://localhost:8080) in your browser.
+
+Refer to [Using JHipster in production][] for more details.
+
+### Packaging as war
+
+To package your application as a war in order to deploy it to an application server, run:
+
+```
+./gradlew -Pprod -Pwar clean bootWar
+```
+
+### JHipster Control Center
+
+JHipster Control Center can help you manage and control your application(s). You can start a local control center server (accessible on http://localhost:7419) with:
+
+```
+docker compose -f src/main/docker/jhipster-control-center.yml up
+```
+
+## Testing
+
+### Spring Boot tests
+
+To launch your application's tests, run:
+
+```
+./gradlew test integrationTest jacocoTestReport
+```
+
+### Client tests
+
+Unit tests are run by [Jest][]. They're located near components and can be run with:
+
+```
+./npmw test
+```
+
+UI end-to-end tests are powered by [Cypress][]. They're located in [src/test/javascript/cypress](src/test/javascript/cypress)
+and can be run by starting Spring Boot in one terminal (`./gradlew bootRun`) and running the tests (`./npmw run e2e`) in a second one.
+
+#### Lighthouse audits
+
+You can execute automated [Lighthouse audits](https://developers.google.com/web/tools/lighthouse/) with [cypress-audit](https://github.com/mfrachet/cypress-audit) by running `./npmw run e2e:cypress:audits`.
+You should only run the audits when your application is packaged with the production profile.
+The lighthouse report is created in `build/cypress/lhreport.html`
+
+## Others
+
+### Code quality using Sonar
+
+Sonar is used to analyse code quality. You can start a local Sonar server (accessible on http://localhost:9001) with:
+
+```
+docker compose -f src/main/docker/sonar.yml up -d
+```
+
+Note: we have turned off forced authentication redirect for UI in [src/main/docker/sonar.yml](src/main/docker/sonar.yml) for out of the box experience while trying out SonarQube, for real use cases turn it back on.
+
+You can run a Sonar analysis with using the [sonar-scanner](https://docs.sonarqube.org/display/SCAN/Analyzing+with+SonarQube+Scanner) or by using the gradle plugin.
+
+Then, run a Sonar analysis:
+
+```
+./gradlew -Pprod clean check jacocoTestReport sonarqube -Dsonar.login=admin -Dsonar.password=admin
+```
+
+Additionally, Instead of passing `sonar.password` and `sonar.login` as CLI arguments, these parameters can be configured from [sonar-project.properties](sonar-project.properties) as shown below:
+
+```
+sonar.login=admin
+sonar.password=admin
+```
+
+For more information, refer to the [Code quality page][].
+
+### Docker Compose support
+
+JHipster generates a number of Docker Compose configuration files in the [src/main/docker/](src/main/docker/) folder to launch required third party services.
+
+For example, to start required services in Docker containers, run:
+
+```
+docker compose -f src/main/docker/services.yml up -d
+```
+
+To stop and remove the containers, run:
+
+```
+docker compose -f src/main/docker/services.yml down
+```
+
+[Spring Docker Compose Integration](https://docs.spring.io/spring-boot/reference/features/dev-services.html) is enabled by default. It's possible to disable it in application.yml:
 
 ```yaml
-# Banco local
-  datasource:
-    type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://localhost:5432/facilitedevjr
-    username: postgres
-    password: root
-```
-Você pode criar um banco com o nome "facilitedevjr" e rodar a aplicação. Altere usuário e senha no arquivo application-dev.yml de acordo com a sua necessidade.
-
-#### Se preferir, configure as variáveis de ambiente:
-```bash
-# Banco local
-export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/hrlite
-export SPRING_DATASOURCE_USERNAME=hrlite
-export SPRING_DATASOURCE_PASSWORD=hrlite
+spring:
+  ...
+  docker:
+    compose:
+      enabled: false
 ```
 
-### 2) Banco via Docker (opcional)
-```bash
-docker run -d --name pg-facilitedevjr -e POSTGRES_DB=facilitedevjr \
-  -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=root \
-  -p 5432:5432 postgres:14
+You can also fully dockerize your application and all the services that it depends on.
+To achieve this, first build a Docker image of your app by running:
+
+```sh
+npm run java:docker
 ```
 
-### 3) Backend
-> Executar com profile 'dev'
-```bash
-./gradlew
-./gradlew clean bootRun
+Or build a arm64 Docker image when using an arm64 processor os like MacOS with M1 processor family running:
+
+```sh
+npm run java:docker:arm64
 ```
 
-* API: `http://localhost:8080`
-* Swagger UI: `/swagger-ui/index.html`
+Then run:
 
-### 4) Frontend
-
-```bash
-npm install
-npm start
+```sh
+docker compose -f src/main/docker/app.yml up -d
 ```
 
-* UI: `http://localhost:9000`
+For more information refer to [Using Docker and Docker-Compose][], this page also contains information on the Docker Compose sub-generator (`jhipster docker-compose`), which is able to generate Docker configurations for one or several JHipster applications.
 
----
+## Continuous Integration (optional)
 
-## Referências JHipster
+To configure CI for your project, run the ci-cd sub-generator (`jhipster ci-cd`), this will let you generate configuration files for a number of Continuous Integration systems. Consult the [Setting up Continuous Integration][] page for more information.
 
-* Docs: [https://www.jhipster.tech](https://www.jhipster.tech)
-* Stack padrão: Spring Boot, Spring Security, MapStruct, JPA, Angular
-* Convenções: DTO + Mapper + ServiceImpl + Resource, paginação e filtros via JHipster
-
----
-
-## Arquitetura do projeto
-
-### Camadas
-
-* **web**: `*Resource` (REST Controllers). Tradução de HTTP para casos de uso.
-* **service**: `*Service` e `*ServiceImpl`. Orquestração, regras, integração ViaCEP.
-* **service.dto**: objetos de fronteira entre web e domínio persistido.
-* **service.mapper**: MapStruct entre entidades e DTOs.
-* **domain**: entidades JPA.
-* **repository**: Spring Data JPA.
-* **client** (Angular): módulos, componentes, serviços HTTP, forms reativos.
-
-### Entidades principais
-
-* `Department(name, costCenter)`
-* `Address(cep, street, number, complement, district, city, uf)`
-* `Employee(firstName, lastName, email, phone, hireDate, salary, active, department, address)`
-
-### Endpoints relevantes
-
-* `GET /api/employees` — paginação padrão JHipster
-* `POST /api/employees` — criação
-* `GET /api/cep/{cep}` — lookup de CEP no ViaCEP via backend **(a implementar)**
-
----
-
-## O que já vem pronto
-
-* CRUD básico gerado pelo JHipster para Employee, Department e Address.
-* Formulário de Employee com campos de endereço e botão “Buscar CEP” visível.
-* Stubs:
-
-  * `CepLookupResource.get(String cep)` — vazio
-  * `CepLookupService.normalizeCep(String raw)` — vazio
-  * `CepLookupService.lookup(String cep)` — vazio
-  * `cep-lookup.service.ts.fetch(cep: string)` — vazio
-  * `employee-update.component.ts.onBuscarCep()` — vazio
-* Testes de esqueleto para `CepLookupServiceTest`.
-
----
-
-## O que precisa ser implementado
-
-### Backend
-
-1. **Normalização e validação de CEP**
-
-* `normalizeCep(String raw)`: remover não dígitos, validar 8 dígitos.
-* CEP inválido → HTTP 400.
-
-2. **Integração ViaCEP**
-
-* `lookup(String cep)`: `https://viacep.com.br/ws/{cep}/json/`.
-* `erro=true` → HTTP 404.
-* Mapear:
-
-  * `logradouro` → `street`
-  * `bairro` → `district`
-  * `localidade` → `city`
-  * `uf` → `uf`
-  * `complemento` → `complement`
-* Falhas de rede ou 5xx → HTTP 502.
-
-3. **Exposição REST**
-
-* `GET /api/cep/{cep}` retorna `AddressDTO`.
-
-4. **Testes**
-
-* Happy path 200.
-* 400 para CEP inválido.
-* 404 para CEP inexistente.
-* 502 para indisponibilidade do ViaCEP.
-
-### Frontend
-
-1. **Serviço de CEP**
-
-* `cep-lookup.service.ts.fetch(cep)`: GET `/api/cep/{cep}`.
-
-2. **Componente**
-
-* `employee-update.component.ts.onBuscarCep()`:
-
-  * Normalizar entrada.
-  * Loading + desabilitar botão durante request.
-  * Preencher `street, district, city, uf, complement`.
-  * Preservar `number` já digitado.
-  * Tratar erros:
-
-    * 400: “CEP inválido”
-    * 404: “CEP não encontrado”
-    * 502: “Serviço de CEP indisponível”
-
-3. **UX mínima**
-
-* Feedback visual de carregamento.
-* Toast ou mensagem inline no form.
-
----
-
-## Critérios de aceite
-
-### Funcional
-
-* `GET /api/cep/{cep}` retorna `200` com `AddressDTO` válido para CEP existente.
-* Form de Employee preenche endereço ao acionar “Buscar CEP”.
-* Mensagens de erro corretas por cenário: 400, 404, 502.
-* Campo `number` preservado após preenchimento automático.
-
-### Qualidade técnica
-
-* Validação e tratamento de exceções consistentes.
-* Mapeamento ViaCEP → `AddressDTO` completo e tipado.
-* Código alinhado a padrões JHipster: DTO, Mapper, ServiceImpl, Resource.
-
-### UX
-
-* Botão com estado de loading.
-* Erros exibidos com texto claro e não intrusivo.
-* Form não perde dados manuais já preenchidos.
-
-### Diferenciais (não obrigatórios)
-
-* Debounce no campo CEP com auto-trigger.
-
----
-
-## Troubleshooting
-
-* `Connection refused` no banco: valide `SPRING_DATASOURCE_URL` e container Postgres.
-* CORS no dev: usar proxy do JHipster ou `application-dev.yml` com CORS habilitado.
-* Erros de build Angular: remover `node_modules`, `npm ci`, `npm start`.
-
----
-
-## Scripts úteis
-
-```bash
-# Lint front
-npm run lint
-
-# Limpeza backend
-./gradlew clean
-
-# Executar com profile dev
-SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
-```
-
----
-
-## Estrutura de pastas (resumo)
-
-```
-src/main/java/.../web/rest         # Resources REST
-src/main/java/.../service          # Serviços e casos de uso
-src/main/java/.../service/dto      # DTOs
-src/main/java/.../service/mapper   # MapStruct
-src/main/java/.../domain           # Entidades JPA
-src/main/java/.../repository       # Repositórios
-src/main/webapp/app/               # Angular app
-```
-
-Entregue a implementação e os testes. Inclua breve nota técnica no PR descrevendo decisões e trade-offs.
+[JHipster Homepage and latest documentation]: https://www.jhipster.tech
+[JHipster 8.11.0 archive]: https://www.jhipster.tech/documentation-archive/v8.11.0
+[Using JHipster in development]: https://www.jhipster.tech/documentation-archive/v8.11.0/development/
+[Using Docker and Docker-Compose]: https://www.jhipster.tech/documentation-archive/v8.11.0/docker-compose
+[Using JHipster in production]: https://www.jhipster.tech/documentation-archive/v8.11.0/production/
+[Running tests page]: https://www.jhipster.tech/documentation-archive/v8.11.0/running-tests/
+[Code quality page]: https://www.jhipster.tech/documentation-archive/v8.11.0/code-quality/
+[Setting up Continuous Integration]: https://www.jhipster.tech/documentation-archive/v8.11.0/setting-up-ci/
+[Node.js]: https://nodejs.org/
+[NPM]: https://www.npmjs.com/
+[OpenAPI-Generator]: https://openapi-generator.tech
+[Swagger-Editor]: https://editor.swagger.io
+[Doing API-First development]: https://www.jhipster.tech/documentation-archive/v8.11.0/doing-api-first-development/
+[Webpack]: https://webpack.github.io/
+[BrowserSync]: https://www.browsersync.io/
+[Jest]: https://jestjs.io
+[Cypress]: https://www.cypress.io/
+[Leaflet]: https://leafletjs.com/
+[DefinitelyTyped]: https://definitelytyped.org/
+[Angular CLI]: https://angular.dev/tools/cli

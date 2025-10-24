@@ -5,6 +5,7 @@ plugins {
     id "eclipse"
     id "com.gorylenko.gradle-git-properties"
     alias(libs.plugins.spring.boot)
+    id "jhipster.openapi-generator-conventions"
     id "jhipster.spring-cache-conventions"
     id "jhipster.docker-conventions"
     id "jhipster.code-quality-conventions"
@@ -13,7 +14,7 @@ plugins {
     // jhipster-needle-gradle-plugins - JHipster will add additional gradle plugins here
 }
 
-group = "co.facilite.devjr"
+group = "com.company.hrlite"
 version = "0.0.1-SNAPSHOT"
 
 description = ""
@@ -74,7 +75,7 @@ eclipse {
 defaultTasks "bootRun"
 
 springBoot {
-    mainClass = "co.facilite.devjr.FacilitedevjrApp"
+    mainClass = "com.company.hrlite.HrLiteApp"
 }
 
 test {
@@ -150,6 +151,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-web"
     testImplementation "org.springframework.boot:spring-boot-test"
     testImplementation "org.springframework.security:spring-security-test"
+    implementation libs.jackson.databind.nullable
     implementation libs.jhipster.framework
     implementation libs.springdoc.openapi.starter.webmvc.api
     implementation "org.springframework.boot:spring-boot-starter-data-jpa"

@@ -18,7 +18,7 @@ logging:
     ROOT: DEBUG
     tech.jhipster: DEBUG
     org.hibernate.SQL: DEBUG
-    co.facilite.devjr: DEBUG
+    com.company.hrlite: DEBUG
 
 spring:
   devtools:
@@ -32,8 +32,8 @@ spring:
       indent-output: true
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://localhost:5432/facilitedevjr
-    username: facilitedevjr
+    url: jdbc:postgresql://localhost:5432/hrLite
+    username: hrLite
     password:
     hikari:
       poolName: Hikari

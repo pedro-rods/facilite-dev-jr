@@ -1,2 +1,4 @@
 org.springframework.test.context.ContextCustomizerFactory = \
-    co.facilite.devjr.config.SqlTestContainersSpringContextCustomizerFactory
+    co.facilite.devjr.config.\
+    SqlTestContainersSpringContextCustomizerFactory,com.company.hrlite.config.\
+    SqlTestContainersSpringContextCustomizerFactory
