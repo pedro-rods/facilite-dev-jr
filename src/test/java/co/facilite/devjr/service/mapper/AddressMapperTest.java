@@ -1,24 +1,20 @@
 package co.facilite.devjr.service.mapper;
 
-import static co.facilite.devjr.domain.AddressAsserts.*;
-import static co.facilite.devjr.domain.AddressTestSamples.*;
+import static co.facilite.devjr.domain.AddressAsserts.assertAddressAllPropertiesEquals;
+import static co.facilite.devjr.domain.AddressTestSamples.getAddressSample1;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 class AddressMapperTest {
 
-    private AddressMapper addressMapper;
+	@Autowired
+	private AddressMapper addressMapper;
 
-    @BeforeEach
-    void setUp() {
-        addressMapper = new AddressMapperImpl();
-    }
-
-    @Test
-    void shouldConvertToDtoAndBack() {
-        var expected = getAddressSample1();
-        var actual = addressMapper.toEntity(addressMapper.toDto(expected));
-        assertAddressAllPropertiesEquals(expected, actual);
-    }
+	@Test
+	void shouldConvertToDtoAndBack() {
+		var expected = getAddressSample1();
+		var actual = addressMapper.toEntity(addressMapper.toDto(expected));
+		assertAddressAllPropertiesEquals(expected, actual);
+	}
 }

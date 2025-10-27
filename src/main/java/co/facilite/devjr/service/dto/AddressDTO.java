@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * A DTO for the {@link co.facilite.devjr.domain.Address} entity.
  */
-@SuppressWarnings("common-java:DuplicatedBlocks")
+@SuppressWarnings({ "common-java:DuplicatedBlocks", "serial" })
 public class AddressDTO implements Serializable {
 
     private Long id;

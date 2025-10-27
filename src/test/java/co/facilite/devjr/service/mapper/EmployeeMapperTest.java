@@ -1,24 +1,20 @@
 package co.facilite.devjr.service.mapper;
 
-import static co.facilite.devjr.domain.EmployeeAsserts.*;
-import static co.facilite.devjr.domain.EmployeeTestSamples.*;
+import static co.facilite.devjr.domain.EmployeeAsserts.assertEmployeeAllPropertiesEquals;
+import static co.facilite.devjr.domain.EmployeeTestSamples.getEmployeeSample1;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 class EmployeeMapperTest {
 
-    private EmployeeMapper employeeMapper;
+	@Autowired
+	private EmployeeMapper employeeMapper;
 
-    @BeforeEach
-    void setUp() {
-        employeeMapper = new EmployeeMapperImpl();
-    }
-
-    @Test
-    void shouldConvertToDtoAndBack() {
-        var expected = getEmployeeSample1();
-        var actual = employeeMapper.toEntity(employeeMapper.toDto(expected));
-        assertEmployeeAllPropertiesEquals(expected, actual);
-    }
+	@Test
+	void shouldConvertToDtoAndBack() {
+		var expected = getEmployeeSample1();
+		var actual = employeeMapper.toEntity(employeeMapper.toDto(expected));
+		assertEmployeeAllPropertiesEquals(expected, actual);
+	}
 }
