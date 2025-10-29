@@ -1,13 +1,15 @@
 package co.facilite.devjr.service.impl;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,69 +23,82 @@ import jakarta.transaction.Transactional;
 @Transactional
 public class CepLookupServiceImpl implements CepLookupService {
 
-	private static ObjectMapper MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-			false);
+	private static final ObjectMapper MAPPER = new ObjectMapper()
+			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+	private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
+
+	@Override
 	public String normalizeCep(String raw) {
 		if (raw == null) {
-			throw new IllegalArgumentException("CEP não pode ser nulo.");
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CEP inválido");
 		}
 		String cep = raw.replaceAll("\\D", "");
 		if (cep.length() != 8) {
-			throw new IllegalArgumentException("CEP inválido. Use 8 dígitos (ex.: 01001000).");
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CEP inválido");
 		}
-
 		return cep;
 	}
 
-	public AddressDTO lookup(String cep) {
-		cep = normalizeCep(cep);
-		String url = "https://viacep.com.br/ws/" + cep + "/json/";
+	@Override
+	public AddressDTO lookup(String rawCep) {
+		String cep = normalizeCep(rawCep);
+
+		HttpRequest req = HttpRequest.newBuilder().uri(URI.create("https://viacep.com.br/ws/" + cep + "/json/"))
+				.timeout(Duration.ofSeconds(8)).GET().build();
+
+		HttpResponse<String> resp;
 		try {
-			// 3) Faz a requisição HTTP
-			HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
-
-			HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).timeout(Duration.ofSeconds(10))
-					.header("Accept", "application/json").GET().build();
-
-			HttpResponse<String> response = client.send(request,
-					HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
-			if (response.statusCode() != 200) {
-				throw new IllegalStateException("Falha ao consultar ViaCEP: HTTP " + response.statusCode());
-			}
-
-			// 4) Desserializa a resposta
-			ViaCepResponse via = MAPPER.readValue(response.body(), ViaCepResponse.class);
-
-			if (Boolean.TRUE.equals(via.erro)) {
-				throw new IllegalArgumentException("CEP não encontrado no ViaCEP.");
-			}
-
-			// 5) Preenche o AddressDTO
-			AddressDTO dto = new AddressDTO();
-			dto.setCep(via.cep != null ? via.cep : cep);
-			dto.setStreet(via.logradouro);
-			dto.setNumber(null); // ViaCEP não informa número
-			dto.setComplement((via.complemento));
-			dto.setDistrict(via.bairro);
-			dto.setCity(via.localidade);
-
-			// Converte a sigla para seu enum Uf (ex.: "SP" -> Uf.SP)
-			if (via.uf == null || via.uf.isBlank()) {
-				throw new IllegalStateException("UF ausente na resposta do ViaCEP.");
-			}
-			dto.setUf(Uf.valueOf(via.uf.toUpperCase())); // assume que o enum tem as siglas das UFs
-
-			return dto;
-
-		} catch (RuntimeException e) {
-			// repropaga erros de validação ou estado
-			throw e;
-		} catch (Exception e) {
-			// encapsula outras exceções (IO, timeout, parsing…)
-			throw new IllegalStateException("Erro ao consultar o CEP no ViaCEP.", e);
+			resp = HTTP.send(req, HttpResponse.BodyHandlers.ofString());
+		} catch (IOException | InterruptedException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Serviço de CEP indisponível", e);
 		}
+
+		int status = resp.statusCode();
+		// mapeamento de erros
+		if (status >= 500) {
+			throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Serviço de CEP indisponível");
+		}
+
+		if (status == 404) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "CEP não encontrado");
+		}
+		if (status == 400) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CEP inválido");
+		}
+
+		if (status != 200) {
+			throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Serviço de CEP indisponível");
+		}
+		// tenta mapear o corpo json da req para a entidade ViaCepResponse
+		ViaCepResponse body;
+		try {
+			body = MAPPER.readValue(resp.body(), ViaCepResponse.class);
+		} catch (Exception e) {
+			
+			throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Serviço de CEP indisponível", e);
+		}
+
+		if (body == null || Boolean.TRUE.equals(body.erro)) {
+			// Sem dados para o CEP informado
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "CEP não encontrado");
+		}
+
+		AddressDTO dto = new AddressDTO();
+		dto.setCep(body.cep != null ? body.cep.replaceAll("\\D", "") : cep);
+		dto.setStreet(body.logradouro);
+		dto.setComplement(body.complemento);
+		dto.setDistrict(body.bairro);
+		dto.setCity(body.localidade);
+		if (body.uf != null) {
+			try {
+				dto.setUf(Uf.valueOf(body.uf));
+			} catch (IllegalArgumentException ex) {
+				// UF invalida vira null
+				dto.setUf(null);
+			}
+		}
+		return dto;
 	}
 
 	private static class ViaCepResponse {
@@ -93,6 +108,6 @@ public class CepLookupServiceImpl implements CepLookupService {
 		public String bairro;
 		public String localidade;
 		public String uf;
-		public Boolean erro; // presente e true quando o CEP não existe
+		public Boolean erro; // true quando o CEP nao existe
 	}
 }

@@ -12,12 +12,23 @@ export type PartialUpdateAddress = Partial<IAddress> & Pick<IAddress, 'id'>;
 export type EntityResponseType = HttpResponse<IAddress>;
 export type EntityArrayResponseType = HttpResponse<IAddress[]>;
 
+export interface CepLookup {
+  id: number | null;
+  cep: string | null;
+  street: string | null;
+  number: string | number | null;
+  complement: string | null;
+  district: string | null;
+  city: string | null;
+  uf: string | null;
+}
 @Injectable({ providedIn: 'root' })
 export class AddressService {
   protected readonly http = inject(HttpClient);
   protected readonly applicationConfigService = inject(ApplicationConfigService);
 
   protected resourceUrl = this.applicationConfigService.getEndpointFor('api/addresses');
+  protected cepUrl = this.applicationConfigService.getEndpointFor('api/cep');
 
   create(address: NewAddress): Observable<EntityResponseType> {
     return this.http.post<IAddress>(this.resourceUrl, address, { observe: 'response' });
@@ -45,8 +56,11 @@ export class AddressService {
   }
 
   cepLookup(cep: string) {
-    /* TODO */
+    const digits = (cep || '').replace(/\D/g, '');
+    console.log(`${this.resourceUrl}`)
+    return this.http.get<CepLookup>(`${this.cepUrl}/${digits}`);
   }
+  
 
   getAddressIdentifier(address: Pick<IAddress, 'id'>): number {
     return address.id;
