@@ -11,7 +11,6 @@ import { Uf } from 'app/entities/enumerations/uf.model';
 import { IAddress } from '../address.model';
 import { AddressService, CepLookup } from '../service/address.service';
 import { AddressFormGroup, AddressFormService } from './address-form.service';
-import { distanceAndSkiddingToXY } from '@popperjs/core/lib/modifiers/offset';
 
 @Component({
   selector: 'jhi-address-update',
@@ -104,10 +103,10 @@ export class AddressUpdateComponent implements OnInit {
     const digits = rawCep.replace(/\D/g, '');
     if (this.lastCepLookedUp === digits) return;
 
-    // validação simples: CEP precisa ter 8 dígitos
+    // validação cep 8 digitos
     if (digits.length !== 8) {
       this.cepErrorMsg = 'CEP inválido';
-      // opcional: marcar erro de minlength para aproveitar mensagens já existentes
+      
       cepCtrl?.setErrors({ minlength: true });
       return;
     }
@@ -117,21 +116,21 @@ export class AddressUpdateComponent implements OnInit {
 
     this.addressService.cepLookup(digits).pipe(finalize(() => (this.cepLoading = false))).subscribe({
       next: (res: CepLookup) => {
-        // mantém o número se o usuário já digitou algo
+        // mantem o numero
         const currentNumber = (numberCtrl?.value ?? '').toString().trim();
 
-        // atualiza demais campos do formulário
+        
         this.editForm.patchValue({
           street: res.street ?? '',
           district: res.district ?? '',
           city: res.city ?? '',
           uf: this.parseUf(res.uf),
           complement: res.complement ?? '',
-          // number: só setaremos abaixo se estiver vazio
+          
         });
 
         if (!currentNumber) {
-          // preenche number se não houver valor digitado
+          
           const incoming = res.number == null ? '' : String(res.number);
           this.editForm.patchValue({ number: incoming });
         }
@@ -154,7 +153,7 @@ export class AddressUpdateComponent implements OnInit {
       },
     });
   }
-  // dispara automaticamente a busca quando o campo CEP perde o foco 
+  
   onCepBlur(): void {
     if (this.cepLoading) return;
     const cepCtrl = this.editForm.get('cep');

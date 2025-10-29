@@ -7,6 +7,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -14,9 +15,10 @@ import org.springframework.web.server.ResponseStatusException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import co.facilite.devjr.domain.enumeration.Uf;
 import co.facilite.devjr.service.CepLookupService;
 import co.facilite.devjr.service.dto.AddressDTO;
+import co.facilite.devjr.service.dto.ViaCepDTO;
+import co.facilite.devjr.service.mapper.AddressMapper;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -25,6 +27,9 @@ public class CepLookupServiceImpl implements CepLookupService {
 
 	private static final ObjectMapper MAPPER = new ObjectMapper()
 			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+	@Autowired
+	private AddressMapper mapper;
 
 	private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
@@ -71,43 +76,20 @@ public class CepLookupServiceImpl implements CepLookupService {
 			throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Serviço de CEP indisponível");
 		}
 		// tenta mapear o corpo json da req para a entidade ViaCepResponse
-		ViaCepResponse body;
+		ViaCepDTO body;
 		try {
-			body = MAPPER.readValue(resp.body(), ViaCepResponse.class);
+			body = MAPPER.readValue(resp.body(), ViaCepDTO.class);
 		} catch (Exception e) {
-			
+
 			throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Serviço de CEP indisponível", e);
 		}
 
-		if (body == null || Boolean.TRUE.equals(body.erro)) {
+		if (body == null || Boolean.TRUE.equals(body.erro) || body.cep == null) {
 			// Sem dados para o CEP informado
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "CEP não encontrado");
 		}
 
-		AddressDTO dto = new AddressDTO();
-		dto.setCep(body.cep != null ? body.cep.replaceAll("\\D", "") : cep);
-		dto.setStreet(body.logradouro);
-		dto.setComplement(body.complemento);
-		dto.setDistrict(body.bairro);
-		dto.setCity(body.localidade);
-		if (body.uf != null) {
-			try {
-				dto.setUf(Uf.valueOf(body.uf));
-			} catch (IllegalArgumentException ex) {
-				// UF invalida vira null
-				dto.setUf(null);
-			}
-		}
-		return dto;
+		return mapper.toDtoFromCepApi(body);
 	}
 
-	private static class ViaCepResponse {
-		public String cep;
-		public String logradouro;
-		public String complemento;
-		public String bairro;
-		public String localidade;
-		public String uf;
-		public Boolean erro; // true quando o CEP nao existe
-	}
 }
