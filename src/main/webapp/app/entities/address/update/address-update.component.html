@@ -20,10 +20,9 @@
         @let cepRef = editForm.get('cep')!;
         <div class="mb-3">
           <label class="form-label" for="field_cep" jhiTranslate="devjrApp.address.cep">Cep</label>
-          <input type="text" class="form-control" name="cep" id="field_cep" data-cy="cep" formControlName="cep" (input)="onCepInput($event)" maxlength="9" inputmode="numeric" autocomplete="postal-code"/>
-          <button type="button" (click)="onBuscarCep()" [disabled]="cepLoading">Procurar endereço</button>
+          <input type="text" class="form-control" name="cep" id="field_cep" data-cy="cep" formControlName="cep" (input)="onCepInput($event)" (blur)="onCepBlur()" maxlength="9" inputmode="numeric" autocomplete="postal-code"/>
+         
 
-          <!-- feedback opcional -->
           <div class="form-text" *ngIf="cepLoading">Buscando endereço…</div>
           <div class="form-text text-danger" *ngIf="cepErrorMsg">{{ cepErrorMsg }}</div>
           @if (cepRef.invalid && (cepRef.dirty || cepRef.touched)) {

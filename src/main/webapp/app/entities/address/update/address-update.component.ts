@@ -11,6 +11,7 @@ import { Uf } from 'app/entities/enumerations/uf.model';
 import { IAddress } from '../address.model';
 import { AddressService, CepLookup } from '../service/address.service';
 import { AddressFormGroup, AddressFormService } from './address-form.service';
+import { distanceAndSkiddingToXY } from '@popperjs/core/lib/modifiers/offset';
 
 @Component({
   selector: 'jhi-address-update',
@@ -21,6 +22,7 @@ export class AddressUpdateComponent implements OnInit {
   isSaving = false;
   address: IAddress | null = null;
   ufValues = Object.keys(Uf);
+  private lastCepLookedUp: string | null = null;
 
   protected addressService = inject(AddressService);
   protected addressFormService = inject(AddressFormService);
@@ -100,15 +102,17 @@ export class AddressUpdateComponent implements OnInit {
 
     const rawCep = (cepCtrl?.value ?? '').toString();
     const digits = rawCep.replace(/\D/g, '');
+    if (this.lastCepLookedUp === digits) return;
 
     // validação simples: CEP precisa ter 8 dígitos
     if (digits.length !== 8) {
-      this.cepErrorMsg = 'CEP inválido. Informe 8 dígitos.';
+      this.cepErrorMsg = 'CEP inválido';
       // opcional: marcar erro de minlength para aproveitar mensagens já existentes
       cepCtrl?.setErrors({ minlength: true });
       return;
     }
 
+    this.lastCepLookedUp = digits
     this.cepLoading = true;
 
     this.addressService.cepLookup(digits).pipe(finalize(() => (this.cepLoading = false))).subscribe({
@@ -139,17 +143,36 @@ export class AddressUpdateComponent implements OnInit {
         console.error('Erro ao buscar CEP', err);
         // usa mensagem do backend, se vier; senão, faz fallback pelo status
         const backendMsg = (err?.error?.message || err?.message || '').trim();
-        let msg = ''        
+        let msg = ''
         if (err.status === 400) msg = 'CEP inválido';
         else if (err.status === 404) msg = 'CEP não encontrado';
         else if (err.status === 502) msg = 'Serviço de CEP indisponível';
         else msg = 'Não foi possível buscar o CEP. Tente novamente.';
-        
+
         this.cepErrorMsg = msg;
-        
+        this.lastCepLookedUp = null;
       },
     });
   }
-
+  // dispara automaticamente a busca quando o campo CEP perde o foco 
+  onCepBlur(): void {
+    if (this.cepLoading) return;
+    const cepCtrl = this.editForm.get('cep');
+    const rawCep = (cepCtrl?.value ?? '').toString();
+    const digits = rawCep.replace(/\D/g, '');  // verificação da qtd de digitos
+    if (digits.length === 8) {
+      this.onBuscarCep();
+    } else if (digits.length > 0) {
+      
+      this.cepErrorMsg = 'CEP inválido';
+      cepCtrl?.setErrors({ minlength: true });
+    } else {
+      // campo vazio: limpa estado
+      this.cepErrorMsg = null;
+      this.lastCepLookedUp = null;
+      cepCtrl?.setErrors(null);
+    }
+  }
 
 }
+
